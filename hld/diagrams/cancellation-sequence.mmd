@@ -1,0 +1,20 @@
+sequenceDiagram
+    actor C as Customer
+    participant BC as BookingController
+    participant BS as BookingService
+    participant DB as PostgreSQL
+
+    C->>BC: POST /api/v1/bookings/{ref}/cancel
+    BC->>BS: cancel(ref)
+    BS->>DB: BEGIN
+    BS->>DB: SELECT booking FOR UPDATE
+    alt not found
+        BS-->>C: 404 BOOKING_NOT_FOUND
+    else already CANCELLED
+        BS-->>C: 409 BOOKING_ALREADY_CANCELLED
+    else CONFIRMED
+        BS->>DB: UPDATE booking status=CANCELLED, cancelled_at=now
+        BS->>DB: UPDATE booking_seat SET active=false
+        BS->>DB: COMMIT
+        BS-->>C: 200 booking with status CANCELLED
+    end

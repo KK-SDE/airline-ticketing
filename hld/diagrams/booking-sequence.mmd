@@ -1,0 +1,23 @@
+sequenceDiagram
+    actor C as Customer
+    participant BC as BookingController
+    participant BS as BookingService
+    participant DB as PostgreSQL
+
+    C->>BC: POST /api/v1/bookings
+    BC->>BC: Bean Validation
+    BC->>BS: create(request)
+    BS->>BS: normalize seats, check count and duplicates
+    BS->>DB: BEGIN
+    BS->>DB: SELECT flight_instance FOR UPDATE
+    Note over DB: concurrent bookings for this flight queue here
+    BS->>BS: flight not departed, seats exist on aircraft
+    BS->>DB: SELECT active seats IN requested
+    alt any seat already active
+        BS-->>C: 409 SEAT_ALREADY_BOOKED, ROLLBACK
+    else all free
+        BS->>DB: INSERT booking, INSERT booking_seat rows
+        Note over DB: partial unique index (flight, seat) WHERE active is the final guard
+        BS->>DB: COMMIT
+        BS-->>C: 201 booking reference, seats, status
+    end

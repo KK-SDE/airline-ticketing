@@ -1,0 +1,8 @@
+flowchart TD
+    A[Admin creates schedule\nPOST /admin/flight-schedules] --> B[Save schedule + days of operation]
+    B --> C[Generate instances\ntoday .. today+365 on operating weekdays]
+    C --> D[(flight_instance\nunique schedule_id + flight_date)]
+    E[Daily cron 00:05 UTC\nand app startup] --> F[ShedLock acquired?]
+    F -->|no| G[skip - another replica runs it]
+    F -->|yes| H[For each schedule, page by page\ninsert only missing dates up to today+365]
+    H --> D

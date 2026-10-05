@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/migrations/202610041500-create-reference-tables.sql
+  - include:
+      file: db/migrations/202610041501-create-flight-tables.sql
+  - include:
+      file: db/migrations/202610041502-create-booking-tables.sql
+  - include:
+      file: db/migrations/202610041503-create-shedlock-table.sql
+  - include:
+      file: db/migrations/202610041504-seed-airports-and-aircraft.sql

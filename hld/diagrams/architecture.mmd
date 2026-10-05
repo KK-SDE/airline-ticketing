@@ -1,0 +1,29 @@
+flowchart LR
+    client([Customer / Back office client])
+
+    subgraph core[airline-core - Spring Boot service]
+        direction TB
+        filter[TraceIdFilter]
+        ctrl[Controllers\nAdminFlightSchedule - Flight - Booking]
+        svc[Services\nFlightSchedule - FlightInstance - Flight - Booking]
+        map[Mappers - MapStruct]
+        repo[Spring Data repositories]
+        ent[JPA entities]
+        sched[FlightInstanceScheduler\ndaily + on startup]
+        err[GlobalExceptionHandler]
+    end
+
+    subgraph db[airline-db - migrations module]
+        lq[Liquibase changelogs\nschema + seed data]
+    end
+
+    pg[(PostgreSQL 'airline')]
+
+    client -->|REST /api/v1| filter --> ctrl --> svc
+    ctrl -.errors.-> err
+    svc --> map
+    svc --> repo --> ent --> pg
+    sched --> svc
+    sched -.ShedLock.-> pg
+    lq -->|applied at startup by Liquibase| pg
+    core -->|depends on| db
